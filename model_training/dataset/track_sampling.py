@@ -54,6 +54,8 @@ class TrackSampler(ItemSampler):
     ):
         self.epoch_data = None
         self.template_data = None
+
+        # 当前数据集中，有多少个独立的跟踪对象
         self.num_tracks = None
         super().__init__(
             data_path=data_path,
@@ -68,9 +70,12 @@ class TrackSampler(ItemSampler):
 
     def _read_data(self) -> pd.DataFrame:
         data = pd.read_csv(self.data_path)
+        # 筛选出来所有没有出现在画面中的帧
         negative = data[data["presence"] == 0]
+        # 计算没有出现的帧的比率
         negative_ratio = len(negative) / len(data)
         num_neg_samples_to_keep = max(0, int(min(negative_ratio, self.negative_ratio) * len(data)))
+        # 直接在数据读取阶段杀drop掉负样本
         num_neg_samples_to_drop = len(negative) - num_neg_samples_to_keep
         dropped_negatives = np.random.choice(negative.index, num_neg_samples_to_drop, replace=False)
         data = data.drop(dropped_negatives)
@@ -78,20 +83,28 @@ class TrackSampler(ItemSampler):
         return data
 
     def resample(self) -> None:
+        """
+        采样一个epoch中所需要的一定数量的样本, 按照每一个track_id 平均采样。
+        """
         if self.num_tracks == len(self.template_data):
             self.epoch_data = self.template_data.sample(self.num_samples).reset_index(drop=True)
         else:
             self.epoch_data = (
                 self.template_data.groupby("track_id")
+                # replace=True，即使某个组的样本数量不足，sample 仍然会通过重复采样来确保二次采样总数是num_samples
                 .sample(int(ceil((self.num_samples / self.num_tracks))), replace=True)
                 .sample(self.num_samples)
                 .reset_index(drop=True)
             )
 
     def parse_samples(self) -> None:
+        """
+        数据集加载
+        """
         self.data = self._read_data()
         self.template_data = self.data[(self.data["presence"] == 1) & (~self.data["near_corner"])]
         self.num_tracks = len(self.template_data["track_id"].unique())
+        # self.mapping 里面存储了 一个 track_id 对应的 rol行号
         self.mapping = self.data.groupby(["track_id"]).groups
         self.resample()
 
@@ -99,6 +112,7 @@ class TrackSampler(ItemSampler):
         template_item = self.epoch_data.iloc[idx]
         track_indices = self.mapping[template_item["track_id"]]
 
+        # 排除掉距离当前真过远的帧
         if self.clip_range:
             search_items = self.data.iloc[track_indices]
             search_item = (

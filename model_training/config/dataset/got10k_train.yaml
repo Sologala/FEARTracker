@@ -15,6 +15,7 @@ sizes:
   context_range: 3
 
 frame_offset: 70
+# 控制训练数据中采样多少的负样本，负样本的presence字段为0, 如果negative_ratio为0，则表示丢弃所有的presence为0的样本
 negative_ratio: 0
 clip_range: True
 
