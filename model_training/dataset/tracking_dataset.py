@@ -7,7 +7,7 @@ import albumentations as A
 import numpy as np
 from hydra.utils import instantiate
 from torch.utils.data.dataloader import default_collate
-
+import cv2
 from model_training.dataset.aug import BBoxCropWithOffsets, PHOTOMETRIC_AUGMENTATIONS, get_normalize_fn
 from model_training.dataset.utils import handle_empty_bbox, read_img
 from model_training.utils.utils import ensure_bbox_boundaries, convert_center_to_bbox, get_extended_crop
@@ -72,8 +72,18 @@ class TrackingDataset(ABC):
         template_image = read_img(os.path.join(self.config["root"], template_item["img_path"]))
         search_image = read_img(os.path.join(self.config["root"], search_item["img_path"]))
 
+        # x, y, w, h = eval(template_item["bbox"])  # 假设 bbox 是 [x, y, w, h] 格式
+        # x1, y1 = int(x), int(y)  # 左上角坐标
+        # x2, y2 = int(x + w), int(y + h)  # 右下角坐标
+        # cv2.rectangle(template_image, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 绘制绿色矩形框
+        # cv2.imshow("temp", template_image)
+        # # cv2.imshow("search", search_image)
+        # cv2.waitKey(0)
+
         template_bbox = ensure_bbox_boundaries(eval(template_item["bbox"]), img_shape=template_image.shape[:2])
         search_bbox = ensure_bbox_boundaries(eval(search_item["bbox"]), img_shape=search_image.shape[:2])
+       
+      
         return dict(
             template_image=template_image,
             template_bbox=template_bbox,

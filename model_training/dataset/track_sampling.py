@@ -112,6 +112,16 @@ class TrackSampler(ItemSampler):
         template_item = self.epoch_data.iloc[idx]
         track_indices = self.mapping[template_item["track_id"]]
 
+        # import cv2
+        # img = cv2.imread("/mnt/HardDisk/datasets/SOT/GOT-10K/train_data/"+ template_item.img_path)
+        # x, y, w, h = eval(template_item["bbox"])  # 假设 bbox 是 [x, y, w, h] 格式
+        # x1, y1 = int(x), int(y)  # 左上角坐标
+        # x2, y2 = int(x + w), int(y + h)  # 右下角坐标
+        # cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 绘制绿色矩形框
+        # cv2.imshow("temp_read", img)
+        # # cv2.imshow("search", search_image)
+        # cv2.waitKey(0)
+
         # 排除掉距离当前真过远的帧
         if self.clip_range:
             search_items = self.data.iloc[track_indices]

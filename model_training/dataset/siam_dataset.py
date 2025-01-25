@@ -33,6 +33,10 @@ class SiameseTrackingDataset(TrackingDataset):
     def _transform(self, item_data: Any) -> Any:
         search_presence = item_data["search_presence"]
         template_crop, template_bbox, search_crop, search_bbox = self._get_crops(item_data)
+        # import cv2
+        # cv2.imshow("temp_corp", template_crop)
+        # cv2.imshow("search_corp", search_crop)
+        # cv2.waitKey(0)
         template_crop, search_crop = self._add_color_augs(search_image=search_crop, template_image=template_crop)
         template_crop, template_bbox = self.transform(image=template_crop, bbox=template_bbox)
         search_crop, search_bbox = self.transform(image=search_crop, bbox=search_bbox)
